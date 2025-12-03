@@ -68,7 +68,6 @@ class Faq(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     iso = models.CharField(max_length=3, choices=ISO_CHOICES)
-    primary = models.BooleanField(default=False)
     question = models.TextField(max_length=500)
     answer = models.TextField(max_length=500)
     order = models.IntegerField()
@@ -106,7 +105,6 @@ def set_filename_to_uuid(instance: Any, filename: str) -> str:
     logger = logging.getLogger(__name__)
     try:
         ext = os.path.splitext(filename)[1]  # extract file extension
-        # Note: Force extension to lowercase.
         new_filename = f"{instance.id}{ext.lower()}"  # use model UUID as filename
         result = os.path.join("images/", new_filename)  # store in 'images/' folder
         logger.debug(f"Generated new filename for upload: {result}")
@@ -214,7 +212,6 @@ class Resource(models.Model):
     tags = models.ManyToManyField("content.Tag", blank=True)
     topics = models.ManyToManyField("content.Topic", blank=True)
 
-    # Explicit type annotation required for mypy compatibility with django-stubs.
     flags: Any = models.ManyToManyField(
         "authentication.UserModel",
         through="ResourceFlag",
@@ -316,17 +313,20 @@ class Topic(models.Model):
 class Text(models.Model):
     """
     Text model for translatable content in different languages.
+
+    Notes
+    -----
+    Default text is now determined via the parent `Organization` model's 'default_iso' field.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     iso = models.CharField(max_length=3, choices=ISO_CHOICES)
-    primary = models.BooleanField(default=False)
+    entity = models.ForeignKey(
+        "communities.Organization", on_delete=models.CASCADE, related_name="texts"
+    )
     description = models.TextField(max_length=2500)
     get_involved = models.TextField(max_length=500, blank=True)
     get_involved_url = models.URLField(blank=True)
 
     def __str__(self) -> str:
         return f"{self.iso} - {self.description[:50]}..."
-
-    class Meta:
-        abstract = False

@@ -42,6 +42,7 @@ class Group(models.Model):
     category = models.CharField(max_length=255)
     terms_checked = models.BooleanField(default=False)
     creation_date = models.DateTimeField(auto_now_add=True)
+    default_iso = models.CharField(max_length=3, default="en")  # CHANGED
 
     topics = models.ManyToManyField("content.Topic", blank=True)
 
